@@ -4,9 +4,10 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 
-# TODO figure out what this does
-# http://networkx.github.io/documentation/latest/reference/generated/networkx.generators.geometric.geographical_threshold_graph.html#networkx.generators.geometric.geographical_threshold_graph
-G=nx.geographical_threshold_graph(n=42, theta=1)
+NUM_SENSORS = 42
+SENSOR_RANGE = 0.2
+
+G = nx.random_geometric_graph(NUM_SENSORS, SENSOR_RANGE)
 
 nx.draw(G)
 plt.show()
