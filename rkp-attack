@@ -2,7 +2,6 @@
 # -*- mode: python; tab-width: 4; indent-tabs-mode: nil -*-
 #
 # Copyright © 2014 Michael Catanzaro
-# Copyright © 2014 Levi Mallot
 #
 # This file is part of RKP Attack.
 #
@@ -25,7 +24,7 @@ import matplotlib.pyplot as plt
 NUM_SENSORS = 42
 SENSOR_RANGE = 0.2
 
-G = nx.random_geometric_graph(NUM_SENSORS, SENSOR_RANGE)
+physical_graph = nx.random_geometric_graph(NUM_SENSORS, SENSOR_RANGE)
 
 nx.draw(G)
 plt.show()
