@@ -66,7 +66,6 @@ def display_graph(G):
     '''
     nx.draw(G, nx.get_node_attributes(G, 'pos'))
     plt.show()
-    plt.clf()
 
 
 physical_graph, logical_graph = deploy_sensors()
