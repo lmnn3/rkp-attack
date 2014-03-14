@@ -67,7 +67,7 @@ def display_graph(G):
     positions = {}
     for i in range(len(G.nodes())):
         positions[i] = G.node[i]['pos']
-    nx.draw(physical_graph, positions)
+    nx.draw(G, positions)
     plt.show()
     plt.clf()
 
