@@ -21,10 +21,57 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 
+import sensor
+
 NUM_SENSORS = 42
 SENSOR_RANGE = 0.2
+KEYS_PER_SENSOR = 10
+TOTAL_KEYS = 1000
+SENSOR_EVIL_PROBABILITY = 0.05
 
-physical_graph = nx.random_geometric_graph(NUM_SENSORS, SENSOR_RANGE)
 
-nx.draw(G)
-plt.show()
+def deploy_sensors():
+    '''
+    Scatters sensors in a uniform random distributon over a unit
+    square. Returns an immutable physical graph indicating which
+    sensors are in range of each other, and a logical graph indicating
+    which physically-adjacent sensors initially share keys. Sensor
+    objects are attributes of the nodes on the logical graph. Note that
+    some sensors in the logical graph will be evil compromised
+    sensors!
+    '''
+    physical_graph = nx.random_geometric_graph(NUM_SENSORS, SENSOR_RANGE)
+    nx.freeze(physical_graph)
+
+    logical_graph = nx.Graph()
+    logical_graph.add_nodes_from(physical_graph.nodes())
+    for i in range(len(logical_graph.nodes())):
+        logical_graph.node[i]['pos'] = physical_graph.node[i]['pos']
+        logical_graph.node[i]['sensor'] = sensor.Sensor(
+            KEYS_PER_SENSOR,
+            TOTAL_KEYS,
+            SENSOR_EVIL_PROBABILITY)
+    sensors = nx.get_node_attributes(logical_graph, 'sensor')
+    for s, t in physical_graph.edges():
+        if sensor.is_key_shared(sensors[s], sensors[t]):
+            logical_graph.add_edge(s, t)
+
+    return physical_graph, logical_graph
+
+
+def display_graph(G):
+    '''
+    Displays a graph using matplotlib. Each node must have a pos
+    attribute to ensure it can be positioned properly in a unit square.
+    '''
+    positions = {}
+    for i in range(len(G.nodes())):
+        positions[i] = G.node[i]['pos']
+    nx.draw(physical_graph, positions)
+    plt.show()
+    plt.clf()
+
+
+physical_graph, logical_graph = deploy_sensors()
+display_graph(physical_graph)
+display_graph(logical_graph)
