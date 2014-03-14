@@ -64,10 +64,7 @@ def display_graph(G):
     Displays a graph using matplotlib. Each node must have a pos
     attribute to ensure it can be positioned properly in a unit square.
     '''
-    positions = {}
-    for i in range(len(G.nodes())):
-        positions[i] = G.node[i]['pos']
-    nx.draw(G, positions)
+    nx.draw(G, nx.get_node_attributes(G, 'pos'))
     plt.show()
     plt.clf()
 
