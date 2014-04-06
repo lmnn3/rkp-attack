@@ -25,7 +25,7 @@ import sensor
 
 NUM_SENSORS = 42
 SENSOR_RANGE = 0.2
-KEYS_PER_SENSOR = 10
+KEYS_PER_SENSOR = 20
 TOTAL_KEYS = 1000
 
 def deploy_sensors(num_good, num_evil, sensor_range, keys_per_sensor):
