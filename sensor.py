@@ -19,12 +19,10 @@
 
 import random
 
-
+    
 class Sensor:
-    def __init__(self, num_keys, total_keys, probability_evil):
+    def __init__(self, num_keys, total_keys):
         self.keys = random.sample(range(total_keys), num_keys)
-        self.evil = (random.random() < probability_evil)
-
 
 def is_key_shared(s, t):
     '''
@@ -35,3 +33,27 @@ def is_key_shared(s, t):
             if s_key == t_key:
                 return True
     return False
+
+
+def add_logical_edge_one_hop(physical_graph, logical_graph, s_node, t_node):
+    '''
+    true if the sensor at node s shares a key with the sensor at node t, or if
+    the sensor at node s shares a key with any sensor within range of the
+    sensor at node t, and the sensor at node t also shares a key with that
+    sensor. It makes sense!
+    '''
+    s_sensor = logical_graph.node[s_node]['sensor']
+    t_sensor = logical_graph.node[t_node]['sensor']
+    if is_key_shared(s_sensor, t_sensor):
+        logical_graph.add_edge(s_node, t_node)
+        return
+    s_neighbors = set(physical_graph.neighbors(s_node))
+    t_neighbors = set(physical_graph.neighbors(t_node))
+    for r_node in list(s_neighbors & t_neighbors) + \
+                  list(s_neighbors - t_neighbors) + \
+                  list(t_neighbors - s_neighbors):
+        r_sensor = logical_graph.node[r_node]['sensor']
+        if is_key_shared(r_sensor, s_sensor) and \
+           is_key_shared(r_sensor, t_sensor):
+            logical_graph.add_edge(s_node, t_node)
+            return
