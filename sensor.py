@@ -1,7 +1,7 @@
 # -*- mode: python; tab-width: 4; indent-tabs-mode: nil -*-
 #
-# Copyright © 2014 Michael Catanzaro
-# Copyright © 2014 Levi Malott
+# Copyright  2014 Michael Catanzaro
+# Copyright  2014 Levi Malott
 #
 # This file is part of RKP Attack.
 #

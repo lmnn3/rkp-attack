@@ -1,8 +1,8 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python2
 # -*- mode: python; tab-width: 4; indent-tabs-mode: nil -*-
 #
-# Copyright © 2014 Michael Catanzaro
-# Copyright © 2014 Levi Malott
+# Copyright  2014 Michael Catanzaro
+# Copyright  2014 Levi Malott
 #
 # This file is part of RKP Attack.
 #
@@ -21,25 +21,35 @@
 
 import networkx as nx
 import matplotlib.pyplot as plt
-
+import random
 import sensor
+import numpy as np
 
-NUM_SENSORS = 42
-SENSOR_RANGE = 0.2
-KEYS_PER_SENSOR = 20
-TOTAL_KEYS = 1000
+NUM_SENSORS     = 1000 
+SENSOR_RANGE    = 0.070
+KEYS_PER_SENSOR = 50 
+TOTAL_KEYS      = 10000
+GRID_SIZE       = 1000
 
-def deploy_sensors(num_good, num_evil, sensor_range, keys_per_sensor):
+def deploy_sensors(num_good, num_evil, g_sensor_range, g_nkeys, e_sensor_range, e_nkeys):
     '''
     Scatters sensors in a uniform random distributon over a unit
     square. Returns an immutable physical graph indicating which
     sensors are in range of each other, and a logical graph indicating
     which physically-adjacent sensors initially share keys. Sensor
     objects are attributes of the nodes on the logical graph.
+
+    Arguments:
+    ==========
+    num_good: number of good sensors to place
+    num_evil: number of malicious sensors to place
+    g_sensor_range: The communication range of good sensors
+    g_nkeys: Number of keys distributed on a single good sensor
+    e_sensor_range: 
     '''
-    physical_graph = nx.random_geometric_graph(num_good, sensor_range)
+    physical_graph = nx.random_geometric_graph(num_good, g_sensor_range)
     nx.freeze(physical_graph)
-    evil_physical_graph = nx.random_geometric_graph(num_evil, sensor_range)
+    evil_physical_graph = nx.random_geometric_graph(num_evil, e_sensor_range)
     physical_graph = nx.disjoint_union(physical_graph, evil_physical_graph)
 
     physical_graph.ngood = num_good
@@ -48,10 +58,24 @@ def deploy_sensors(num_good, num_evil, sensor_range, keys_per_sensor):
     logical_graph = nx.Graph()
     logical_graph.add_nodes_from(physical_graph.nodes())
 
-    for i in range(num_good + num_evil):
+    for i in range(num_good):
         logical_graph.node[i]['pos'] = physical_graph.node[i]['pos']
         logical_graph.node[i]['sensor'] = sensor.Sensor(
-            keys_per_sensor, TOTAL_KEYS)
+            g_nkeys, TOTAL_KEYS)
+
+    for i in xrange(num_good, num_good+num_evil):
+        logical_graph.node[i]['pos'] = physical_graph.node[i]['pos']
+        logical_graph.node[i]['sensor'] = sensor.Sensor(
+            e_nkeys, TOTAL_KEYS)
+
+    for i in xrange(num_good):
+        node1 = logical_graph.node[i]
+        for j in xrange(num_good, num_good+num_evil):
+            node2 = logical_graph.node[j]
+            if( np.linalg.norm(np.array(node1['pos']) - np.array(node2['pos'])) < e_sensor_range ):
+                physical_graph.add_edge(i, j)
+
+
 
     sensors = nx.get_node_attributes(logical_graph, 'sensor')
     for s, t in physical_graph.edges():
@@ -71,12 +95,37 @@ def display_graph(G_p, G_l):
 
     colors = ['g'] * G_p.ngood + ['r'] * G_p.nevil
 
-    nx.draw_networkx(G_p, pos=nx.get_node_attributes( G_p, 'pos' ), ax=ax1, node_color=colors)
+    G_p_pos = nx.get_node_attributes( G_p, 'pos' )
+    nx.draw_networkx(G_p, pos=G_p_pos, ax=ax1, node_color=colors)
     nx.draw_networkx(G_l, pos=nx.get_node_attributes( G_l, 'pos' ), ax=ax2, node_color=colors)
     plt.show()
 
+random.seed()
 
-physical_graph, logical_graph = deploy_sensors(
-    NUM_SENSORS, NUM_SENSORS, SENSOR_RANGE, KEYS_PER_SENSOR)
-display_graph(physical_graph, logical_graph)
+
+
+#for r in (0.055, 0.070, 0.080, 0.090, 0.10):
+#    physical_graph, logical_graph = deploy_sensors(
+#        NUM_SENSORS, 50, r, KEYS_PER_SENSOR, r, KEYS_PER_SENSOR*2)
+#    degrees = logical_graph.degree().values()
+#    g_mean_degree = np.mean(degrees[:physical_graph.ngood])
+#    e_mean_degree = np.mean(degrees[physical_graph.ngood:])
+#    print((r, g_mean_degree, e_mean_degree))
+#
+
+comm_radius = 0.070
+
+for k in (40, 50, 60, 70, 80):
+    physical_graph, logical_graph = deploy_sensors(
+        NUM_SENSORS, 50, comm_radius, KEYS_PER_SENSOR, comm_radius, k)
+    nsensors = physical_graph.ngood
+    compromised = np.zeros(nsensors)
+    for node in nx.nodes_iter(logical_graph):
+        if( node >= nsensors):
+            break
+        bad_neighbors = [ n for n in logical_graph.neighbors(node) if n >= nsensors ]
+        compromised[node] = 1 if len(bad_neighbors) > 0 else 0 
+    ncompromised = compromised.sum()
+    print( (k, ncompromised) )
+#display_graph(physical_graph, logical_graph)
 #display_graph(logical_graph)
